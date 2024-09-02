@@ -7,4 +7,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
   },
+  esbuild: {
+    target: "esnext", // or 'chrome89', 'firefox85', etc.
+  },
 });

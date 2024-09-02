@@ -6,6 +6,7 @@ let shapeRate = INITIAL_SHAPE_RATE;
 let gravity = 1;
 
 // Create the application
+
 const app = new PIXI.Application();
 await app.init({
   width: CANVAS_WIDTH,
