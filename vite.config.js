@@ -7,7 +7,10 @@ export default defineConfig({
   build: {
     outDir: "dist",
   },
+  build: {
+    target: "esnext", // Ensures that modern JS features like top-level await are supported
+  },
   esbuild: {
-    target: "es2019", // or 'chrome89', 'firefox85', etc.
+    target: "esnext",
   },
 });
