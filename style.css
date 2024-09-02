@@ -1,0 +1,50 @@
+/* Resetting default margins */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Container for the canvas and other elements */
+#container {
+  display: flex;
+  position: relative;
+  width: 800px;
+  min-height: 600px;
+  margin: auto;
+}
+
+/* Ensures the canvas fills the container */
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* width: 800px;
+  height: 600px; */
+  border: 3px solid black;
+}
+
+/* Stats positioning */
+#stats {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  z-index: 10; /* Ensure stats are above canvas */
+}
+
+/* Controls positioning */
+#controls {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  z-index: 10; /* Ensure controls are above canvas */
+}
+
+button {
+  margin: 0 5px;
+}

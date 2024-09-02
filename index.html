@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PixiJS Falling Shapes</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="stats">
+        <div id="shape-count">Shapes: 0</div>
+        <div id="shape-area">Area: 0 px²</div>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div id="controls">
+        <button id="decrease-rate">- Shape Rate</button>
+        <button id="increase-rate">+ Shape Rate</button>
+        <button id="decrease-gravity">- Gravity</button>
+        <button id="increase-gravity">+ Gravity</button>
+      </div>
+    </div>
+    <script src="https://pixijs.download/release/pixi.min.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
