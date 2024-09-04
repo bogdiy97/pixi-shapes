@@ -113,6 +113,20 @@ class ShapeManager {
     this.canvasHeight = window.innerHeight;
     this.stage.width = this.canvasWidth;
     this.stage.height = this.canvasHeight;
+
+    // Adjust positions of shapes relative to the new canvas dimensions
+    this.shapes.forEach((shape) => {
+      const bounds = shape.getBounds();
+
+      // Ensure the shape stays within the bounds of the new canvas size
+      if (bounds.x + bounds.width > this.canvasWidth) {
+        shape.x = this.canvasWidth - bounds.width;
+      }
+      if (bounds.y + bounds.height > this.canvasHeight) {
+        shape.y = this.canvasHeight - bounds.height;
+      }
+    });
+
     this.updateStats(); // Update stats after resize
   }
 
@@ -195,9 +209,9 @@ class ShapeManager {
     // Loop through each shape
     for (const shape of this.shapes) {
       this.movementStrategy.move(shape, this.gravity); // Move the shape based on the strategy
-
+      const bounds = shape.getBounds();
       // Check if the shape is fully off-screen
-      if (shape.y > this.canvasHeight) {
+      if (bounds.y > this.canvasHeight) {
         shapesToRemove.push(shape); // Mark shape for removal
       }
     }
@@ -226,6 +240,7 @@ class ShapeManager {
     this.shapeRate = newRate; // Update shape rate
     this.shapeGenerationInterval = setInterval(
       this.generateShape, // Function to generate a shape
+
       1000 / this.shapeRate // Interval in milliseconds
     );
   }
@@ -331,23 +346,6 @@ class UIHandler {
 
     // Ensure shape clicks are handled separately
     this.shapeManager.stage.interactive = true;
-
-    // this.shapeManager.stage.addEventListener(
-    //   "click",
-    //   function () {
-    //     console.log(arguments);
-    //   },
-    //   {
-    //     capture: false,
-    //   }
-    // );
-    // this.shapeManager.stage.on("pointerdown", (event) => {
-    //   debugger;
-    //   if (event.target instanceof PIXI.Graphics) {
-    //     // Shape was clicked
-    //     event.target.emit("pointerdown", event); // Trigger the pointerdown event
-    //   }
-    // });
   }
 }
 
