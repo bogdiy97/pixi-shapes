@@ -78,10 +78,10 @@ class MovementStrategy {
 }
 
 // ShapeManager class to manage shapes
-// ShapeManager class to manage shapes
 class ShapeManager {
-  constructor(stage, canvasWidth, canvasHeight, movementStrategy) {
+  constructor(stage, canvasWidth, canvasHeight, movementStrategy, view) {
     this.stage = stage; // PIXI stage where shapes are drawn
+    this.view = view;
     this.canvasWidth = canvasWidth; // Width of the canvas
     this.canvasHeight = canvasHeight; // Height of the canvas
     this.shapes = []; // Array to store shapes
@@ -89,7 +89,7 @@ class ShapeManager {
     this.shapeRate = 2; // Shape generation rate (shapes per second)
     this.shapeGenerationInterval = null; // Interval for shape generation
     this.movementStrategy = movementStrategy; // Strategy for moving shapes
-
+    this.shapeClicked = false;
     // Bind methods to ensure proper context
     this.createShape = this.createShape.bind(this);
     this.createWeirdShape = this.createWeirdShape.bind(this);
@@ -102,6 +102,18 @@ class ShapeManager {
 
     // Initialize shape generation interval
     this.updateShapeGenerationInterval(this.shapeRate);
+
+    // Add a resize event listener
+    window.addEventListener("resize", this.handleResize.bind(this));
+  }
+
+  // Method to handle canvas resizing
+  handleResize() {
+    this.canvasWidth = window.innerWidth;
+    this.canvasHeight = window.innerHeight;
+    this.stage.width = this.canvasWidth;
+    this.stage.height = this.canvasHeight;
+    this.updateStats(); // Update stats after resize
   }
 
   // Method to create a random shape at (x, y)
@@ -124,13 +136,14 @@ class ShapeManager {
     this.stage.addChild(shape);
     this.shapes.push(shape);
 
-    // Event listener to remove shape when clicked
-    shape.on("pointerdown", (e) => {
-      e.stopPropagation(); // Prevent event from propagating
+    // Function to remove shape when clicked
+    function removeClickedShape() {
+      this.shapeClicked = true;
       this.stage.removeChild(shape); // Remove shape from the stage
       this.shapes.splice(this.shapes.indexOf(shape), 1); // Remove shape from the array
       this.updateStats(); // Update stats after removal
-    });
+    }
+    shape.addEventListener("click", removeClickedShape.bind(this));
 
     return shape; // Return the created shape
   }
@@ -160,14 +173,15 @@ class ShapeManager {
     graphics.y = y; // Set y position
     graphics.interactive = true; // Make the shape interactive
     graphics.buttonMode = true; // Change cursor to pointer when hovering
-
-    // Event listener to remove shape when clicked
-    graphics.on("pointerdown", (event) => {
-      event.stopPropagation(); // Prevent event from propagating
+    // Function to remove shape when clicked
+    function removeClickedShape() {
+      this.shapeClicked = true;
       this.stage.removeChild(graphics); // Remove shape from the stage
       this.shapes.splice(this.shapes.indexOf(graphics), 1); // Remove shape from the array
       this.updateStats(); // Update stats after removal
-    });
+    }
+    graphics.addEventListener("click", removeClickedShape.bind(this));
+    // Event listener to remove shape when clicked
 
     this.stage.addChild(graphics); // Add shape to the stage
     this.shapes.push(graphics); // Add shape to the shapes array
@@ -182,20 +196,13 @@ class ShapeManager {
     for (const shape of this.shapes) {
       this.movementStrategy.move(shape, this.gravity); // Move the shape based on the strategy
 
-      // Check if the shape should start disappearing
-      if (shape.y > this.canvasHeight - 50) {
-        // Start animation before fully off-screen
-        shape.alpha -= 0.02; // Decrease opacity
-        shape.y += 2; // Move downward
-
-        // Check if the shape has fully disappeared
-        if (shape.alpha <= 0) {
-          shapesToRemove.push(shape); // Mark shape for removal
-        }
+      // Check if the shape is fully off-screen
+      if (shape.y > this.canvasHeight) {
+        shapesToRemove.push(shape); // Mark shape for removal
       }
     }
 
-    // Remove shapes that have completed the animation
+    // Remove shapes that have exited the screen
     for (const shape of shapesToRemove) {
       this.stage.removeChild(shape); // Remove shape from the stage
       this.shapes.splice(this.shapes.indexOf(shape), 1); // Remove shape from the array
@@ -230,7 +237,9 @@ class ShapeManager {
 
     // Loop through each shape to calculate total area
     for (const shape of this.shapes) {
-      totalArea += this.getShapeArea(shape); // Add shape's area to total
+      if (this.isShapeVisible(shape)) {
+        totalArea += this.getShapeArea(shape); // Add shape's area to total
+      }
     }
 
     // Update the shape count and total area on the page
@@ -238,6 +247,17 @@ class ShapeManager {
     document.getElementById(
       "shape-area"
     ).innerText = `Area: ${totalArea.toFixed(2)} px²`;
+  }
+
+  // Method to check if a shape is visible on the canvas
+  isShapeVisible(shape) {
+    const bounds = shape.getBounds(); // Get the bounds of the shape
+    return (
+      bounds.x + bounds.width > 0 &&
+      bounds.x < this.canvasWidth &&
+      bounds.y + bounds.height > 0 &&
+      bounds.y < this.canvasHeight
+    );
   }
 
   // Method to calculate the area of a shape
@@ -250,36 +270,19 @@ class ShapeManager {
 
   // Method to handle canvas click events
   handleCanvasClick(event) {
+    if (this.shapeClicked) {
+      this.shapeClicked = false;
+      return;
+    }
     const rect = app.view.getBoundingClientRect(); // Get the bounding rectangle of the canvas
     const clickX = event.clientX - rect.left; // X coordinate of the click
     const clickY = event.clientY - rect.top; // Y coordinate of the click
 
-    let shapeClicked = false; // Flag to check if a shape was clicked
-
-    // Loop through each shape to check if it was clicked
-    for (const shape of this.shapes) {
-      const bounds = shape.getBounds(); // Get the bounds of the shape
-      // Check if the click coordinates are within the bounds of the shape
-      if (
-        clickX >= bounds.x &&
-        clickX <= bounds.x + bounds.width &&
-        clickY >= bounds.y &&
-        clickY <= bounds.y + bounds.height
-      ) {
-        shapeClicked = true; // Set flag to true if shape was clicked
-        break; // Exit the loop if a shape was clicked
-      }
-    }
-
-    // If no shape was clicked, create a weird shape at the click position
-    if (!shapeClicked) {
-      this.createWeirdShape(clickX, clickY); // Create weird shape
-      this.updateStats(); // Update stats
-    }
+    this.createWeirdShape(clickX, clickY); // Create weird shape
+    this.updateStats(); // Update stats
   }
 }
 
-// Observer Pattern for UI Updates
 // Observer Pattern for UI Updates
 class UIHandler {
   constructor(shapeManager) {
@@ -324,24 +327,33 @@ class UIHandler {
       });
 
     // Event listener for clicks on the canvas
-    app.view.addEventListener("click", (event) => {
-      this.shapeManager.handleCanvasClick(event); // Handle click
-    });
+    app.view.addEventListener("click", this.shapeManager.handleCanvasClick);
 
     // Ensure shape clicks are handled separately
     this.shapeManager.stage.interactive = true;
-    this.shapeManager.stage.on("click", (event) => {
-      if (event.target instanceof PIXI.Graphics) {
-        // Shape was clicked
-        event.target.emit("click", event); // Trigger the pointerdown event
-      }
-    });
+
+    // this.shapeManager.stage.addEventListener(
+    //   "click",
+    //   function () {
+    //     console.log(arguments);
+    //   },
+    //   {
+    //     capture: false,
+    //   }
+    // );
+    // this.shapeManager.stage.on("pointerdown", (event) => {
+    //   debugger;
+    //   if (event.target instanceof PIXI.Graphics) {
+    //     // Shape was clicked
+    //     event.target.emit("pointerdown", event); // Trigger the pointerdown event
+    //   }
+    // });
   }
 }
 
 // Usage
-const CANVAS_WIDTH = document.getElementById("container").clientWidth; // Get canvas width
-const CANVAS_HEIGHT = document.getElementById("container").clientHeight; // Get canvas height
+const CANVAS_WIDTH = window.innerWidth; // Get canvas width
+const CANVAS_HEIGHT = window.innerHeight; // Get canvas height
 
 const app = new PIXI.Application(); // Create PIXI application
 await app.init({
@@ -367,7 +379,8 @@ const shapeManager = new ShapeManager(
   app.stage, // PIXI stage
   CANVAS_WIDTH, // Canvas width
   CANVAS_HEIGHT, // Canvas height
-  movementStrategy // Movement strategy instance
+  movementStrategy, // Movement strategy instance
+  app.view
 );
 new UIHandler(shapeManager); // Create UIHandler instance
 
